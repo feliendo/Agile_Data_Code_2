@@ -1,6 +1,6 @@
 Flask
-airflow
-beautifulsoup4 
+# apache-airflow
+beautifulsoup4
 bs4
 frozendict
 geopy
@@ -20,4 +20,4 @@ tldextract
 wikipedia
 findspark
 iso8601
-notebook==5.0.0
+notebook==5.7.4

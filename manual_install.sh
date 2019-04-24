@@ -15,9 +15,9 @@ echo "export PROJECT_HOME=$PROJECT_HOME" >> ~/.bash_profile
 # Check if Java is installed and halt if not
 #
 if [ -z `which java` ]; then
-  echo "ERROR: JAVA IS REQUIRED TO CONTINUE INSTALL!"
-  echo "Please install Java, which you can find at https://www.java.com/en/download/help/download_options.xml"
-  exit;
+  echo "Insalling JAVA"
+  sudo apt install default-jre
+  java -version
 else
   echo "Java detected, continuing install..."
 fi
@@ -37,8 +37,8 @@ if [ "$(uname)" == "Darwin" ]; then
     MONGO_DOWNLOAD_URL='https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-3.4.2.tgz'
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     ANADONCA_OS_NAME='Linux'
-    MONGO_FILENAME='mongodb-linux-x86_64-amazon-3.4.1.tgz'
-    MONGO_DOWNLOAD_URL='https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.4.2.tgz'
+    MONGO_FILENAME='mongodb-org-server_4.0.8_amd64.deb'
+    MONGO_DOWNLOAD_URL='https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/4.0/multiverse/binary-amd64/mongodb-org-server_4.0.8_amd64.deb'
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
     ANADONCA_OS_NAME='Windows'
     MONGO_FILENAME='mongodb-win32-x86_64-3.4.1-signed.msi'
@@ -50,12 +50,12 @@ fi
 #
 
 # Only install Anaconda if it isn't already there
-if [ ! -d $HOME/anaconda ]; then
-  echo "Anaconda not found, installing to $HOME/anaconda ..."
+if [ ! -d $HOME/anaconda3 ]; then
+  echo "Anaconda not found, installing to $HOME/anaconda3 ..."
   curl -Lko "/tmp/Anaconda3-4.2.0-${ANADONCA_OS_NAME}-x86_64.sh" "http://repo.continuum.io/archive/Anaconda3-4.2.0-${ANADONCA_OS_NAME}-x86_64.sh"
-  bash "/tmp/Anaconda3-4.2.0-${ANADONCA_OS_NAME}-x86_64.sh" -b -p $HOME/anaconda
-  export PATH="$HOME/anaconda/bin:$PATH"
-  echo 'export PATH="$HOME/anaconda/bin:$PATH"' >> ~/.bash_profile
+  bash "/tmp/Anaconda3-4.2.0-${ANADONCA_OS_NAME}-x86_64.sh" -b -p $HOME/anaconda3
+  export PATH="$HOME/anaconda3/bin:$PATH"
+  echo 'export PATH="$HOME/anaconda3/bin:$PATH"' >> ~/.bash_profile
 else
   echo "Skipping Anaconda, already installed..."
 fi
@@ -65,8 +65,8 @@ fi
 #
 
 # Spark don't work with python 3.6
-echo "Downgrading Anaconda Python from 3.6 to 3.5, as 3.6 doesn't work with Spark 2.1.0 ..."
-conda install python=3.5
+# echo "Downgrading Anaconda Python from 3.6 to 3.5, as 3.6 doesn't work with Spark 2.1.0 ..."
+# conda install python=3.5
 
 echo "Installing Python libraries..."
 # Install as many requirements as we can with conda
@@ -79,13 +79,14 @@ pip install -r requirements.txt
 # our Hadoop environment for Spark to run
 #
 if [ ! -d hadoop ]; then
-  echo "Installing hadoop 2.7.4 into $PROJECT_HOME/hadoop ..."
+  echo "Installing hadoop 3.1.2 into $PROJECT_HOME/hadoop ..."
 
-  # May need to update this link... see http://hadoop.apache.org/releases.html
-  curl -Lko /tmp/hadoop-2.7.4.tar.gz http://apache.osuosl.org/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz
+  # May need to update this link... see https://hadoop.apache.org/releases.html
+  # curl -Lko /tmp/hadoop-3.1.2.tar.gz http://apache.osuosl.org/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz
+  curl -Lko /tmp/hadoop-3.1.2.tar.gz http://apache.mirror.anlx.net/hadoop/common/hadoop-3.1.2/hadoop-3.1.2.tar.gz
 
   mkdir hadoop
-  tar -xvf /tmp/hadoop-2.7.4.tar.gz -C hadoop --strip-components=1
+  tar -xzvf /tmp/hadoop-3.1.2.tar.gz -C hadoop --strip-components=1
   echo '# Hadoop environment setup' >> ~/.bash_profile
   export HADOOP_HOME=$PROJECT_HOME/hadoop
   echo 'export HADOOP_HOME=$PROJECT_HOME/hadoop' >> ~/.bash_profile
@@ -104,13 +105,14 @@ fi
 # our Spark environment for PySpark to run
 #
 if [ ! -d spark ]; then
-  echo "Installing Spark 2.1.0 into $PROJECT_HOME/spark ..."
+  echo "Installing Spark 2.4.1 into $PROJECT_HOME/spark ..."
 
   # May need to update this link... see http://spark.apache.org/downloads.html
-  curl -Lko /tmp/spark-2.1.0-bin-without-hadoop.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-without-hadoop.tgz
+  # curl -Lko /tmp/spark-2.1.0-bin-without-hadoop.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-without-hadoop.tgz
+  curl -Lko /tmp/spark-2.4.1-bin-without-hadoop.tgz https://archive.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-without-hadoop.tgz
 
   mkdir spark
-  tar -xvf /tmp/spark-2.1.0-bin-without-hadoop.tgz -C spark --strip-components=1
+  tar -xzvf /tmp/spark-2.4.1-bin-without-hadoop.tgz -C spark --strip-components=1
   echo "" >> ~/.bash_profile
   echo "# Spark environment setup" >> ~/.bash_profile
   export SPARK_HOME=$PROJECT_HOME/spark
@@ -127,7 +129,7 @@ if [ ! -d spark ]; then
   echo 'spark.io.compression.codec org.apache.spark.io.SnappyCompressionCodec' >> spark/conf/spark-defaults.conf
 
   # Give Spark 8GB of RAM
-  echo "spark.driver.memory 8g" >> $SPARK_HOME/conf/spark-defaults.conf
+  echo "spark.driver.memory 7g" >> $SPARK_HOME/conf/spark-defaults.conf
 
   echo "PYSPARK_PYTHON=python3" >> $SPARK_HOME/conf/spark-env.sh
   echo "PYSPARK_DRIVER_PYTHON=python3" >> $SPARK_HOME/conf/spark-env.sh
